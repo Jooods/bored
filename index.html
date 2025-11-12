@@ -1,119 +1,365 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Elegant Mouse Follower — Clean Background</title>
-  <style>
-    :root{
-      --bg:#0f1724;
-      --accent1: #7c5cff;
-      --accent2: #24d2ff;
-    }
-    html, body { height: 100%; margin:0; overflow:hidden; cursor:none; }
-    body {
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,0.10), transparent),
-                  radial-gradient(1000px 500px at 90% 90%, rgba(36,210,255,0.06), transparent),
-                  var(--bg);
-      display:flex; align-items:center; justify-content:center;
-    }
-    .cursor-layer{
-      position:fixed; left:0; top:0; pointer-events:none; width:100%; height:100%; z-index:9999; mix-blend-mode:screen;
-    }
-    .dot{
-      position:absolute; width:22px; height:22px; border-radius:50%; transform:translate(-50%,-50%);
-      box-shadow:0 8px 20px rgba(2,10,30,0.6),0 1px 0 rgba(255,255,255,0.06) inset;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.2) 15%, transparent 60%),
-                  linear-gradient(135deg,var(--accent1),var(--accent2));
-      transition: width 220ms ease, height 220ms ease, opacity 220ms ease, transform 220ms ease;
-    }
-    .halo{
-      position:absolute; width:120px; height:120px; border-radius:50%; transform:translate(-50%,-50%);
-      background: radial-gradient(circle, rgba(124,92,255,0.18), rgba(36,210,255,0.08) 40%, transparent 60%);
-      filter: blur(18px); opacity:0.9; pointer-events:none; mix-blend-mode:screen;
-    }
-    .trail{
-      position:absolute; width:10px; height:10px; border-radius:50%; transform:translate(-50%,-50%);
-      background: linear-gradient(135deg, rgba(124,92,255,0.95), rgba(36,210,255,0.95));
-      box-shadow:0 6px 18px rgba(2,8,20,0.6); opacity:0.95; will-change: transform, opacity;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Interactive Universe Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            text-align: center;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="cursor-layer" id="layer">
-    <div id="halo" class="halo" style="left:50%;top:50%;opacity:0"></div>
-    <div id="dot" class="dot" style="left:50%;top:50%;opacity:0"></div>
-  </div>
-  <script>
-    const TRAIL_COUNT = 12;
-    const LERP = 0.18;
-    const TRAIL_LERP = 0.12;
-    const BURST_PARTICLES = 18;
+    <div class="info">
+        <div class="title">UNIVERSE PORTAL</div>
+        <div>Move your mouse to control the vortex</div>
+    </div>
+    <div class="controls">
+        Click to spawn light bursts | Hold mouse for intense gravity
+    </div>
+    <canvas id="canvas"></canvas>
 
-    let mouse = {x: window.innerWidth/2, y: window.innerHeight/2};
-    let dotPos = {x: mouse.x, y: mouse.y};
-    let haloPos = {x: mouse.x, y: mouse.y};
-    let trails = [];
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+        
+        const mouse = { x: w / 2, y: h / 2, down: false };
+        const stars = [];
+        const particles = [];
+        const portalRings = [];
+        let hue = 0;
+        let time = 0;
 
-    const layer = document.getElementById('layer');
-    const dot = document.getElementById('dot');
-    const halo = document.getElementById('halo');
+        // Portal center
+        const portal = { x: w / 2, y: h / 2, size: 0 };
 
-    for(let i=0;i<TRAIL_COUNT;i++){
-      const el = document.createElement('div'); el.className='trail';
-      el.style.width = el.style.height = `${8 + (i/TRAIL_COUNT)*14}px`;
-      el.style.opacity = `${0.8 - (i/TRAIL_COUNT)*0.65}`;
-      layer.appendChild(el);
-      trails.push({el, x: mouse.x, y: mouse.y});
-    }
+        class Star {
+            constructor() {
+                this.reset();
+                this.z = Math.random() * 1000;
+            }
 
-    window.addEventListener('mousemove', e=>{ mouse.x=e.clientX; mouse.y=e.clientY; halo.style.opacity=1; dot.style.opacity=1; });
-    window.addEventListener('mouseout', ()=>{ halo.style.opacity=0; dot.style.opacity=0; });
+            reset() {
+                this.x = Math.random() * w - w / 2;
+                this.y = Math.random() * h - h / 2;
+                this.z = Math.random() * 1000;
+                this.size = Math.random() * 2;
+                this.pulseSpeed = Math.random() * 0.02 + 0.01;
+                this.pulseOffset = Math.random() * Math.PI * 2;
+            }
 
-    function lerp(a,b,t){ return a + (b-a)*t; }
+            update() {
+                this.z -= 2 + (mouse.down ? 5 : 0);
+                if (this.z <= 0) this.reset();
+            }
 
-    function animate(){
-      dotPos.x = lerp(dotPos.x, mouse.x, LERP);
-      dotPos.y = lerp(dotPos.y, mouse.y, LERP);
-      dot.style.transform = `translate(${dotPos.x}px, ${dotPos.y}px) translate(-50%, -50%)`;
+            draw() {
+                const scale = 1000 / this.z;
+                const x2d = this.x * scale + portal.x;
+                const y2d = this.y * scale + portal.y;
+                const size = this.size * scale;
+                
+                const pulse = Math.sin(time * this.pulseSpeed + this.pulseOffset);
+                const brightness = 0.5 + pulse * 0.5;
 
-      haloPos.x = lerp(haloPos.x, mouse.x, LERP*0.6);
-      haloPos.y = lerp(haloPos.y, mouse.y, LERP*0.6);
-      const speed = Math.hypot(dotPos.x-mouse.x, dotPos.y-mouse.y);
-      const haloScale = Math.min(1.6,1+speed/80);
-      halo.style.transform = `translate(${haloPos.x}px, ${haloPos.y}px) translate(-50%, -50%) scale(${haloScale})`;
+                if (x2d >= 0 && x2d <= w && y2d >= 0 && y2d <= h) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${brightness * (1 - this.z / 1000)})`;
+                    ctx.beginPath();
+                    ctx.arc(x2d, y2d, size, 0, Math.PI * 2);
+                    ctx.fill();
 
-      for(let i=0;i<trails.length;i++){
-        const t=trails[i];
-        const targetX = i===0? dotPos.x: trails[i-1].x;
-        const targetY = i===0? dotPos.y: trails[i-1].y;
-        t.x = lerp(t.x, targetX, TRAIL_LERP+ i*0.01);
-        t.y = lerp(t.y, targetY, TRAIL_LERP+ i*0.01);
-        t.el.style.transform = `translate(${t.x}px, ${t.y}px) translate(-50%, -50%)`;
-      }
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+                    if (size > 1.5) {
+                        ctx.fillStyle = `rgba(200, 200, 255, ${brightness * 0.3})`;
+                        ctx.beginPath();
+                        ctx.arc(x2d, y2d, size * 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
 
-    window.addEventListener('click',(e)=>{
-      for(let i=0;i<BURST_PARTICLES;i++){
-        const p = document.createElement('div'); p.className='trail';
-        const size = 6 + Math.random()*12; p.style.width=p.style.height=size+'px';
-        p.style.left=e.clientX+'px'; p.style.top=e.clientY+'px'; layer.appendChild(p);
-        const angle=Math.PI*2*(i/BURST_PARTICLES)+(Math.random()-0.5)*0.8;
-        const speed = 40+Math.random()*120; const dx=Math.cos(angle)*speed; const dy=Math.sin(angle)*speed;
-        const life = 700+Math.random()*700; const start = performance.now();
-        (function tick(){
-          const t=(performance.now()-start)/life; if(t>=1){p.remove();return;}
-          const ease = 1-(--t)*t*t*t;
-          p.style.transform = `translate(${e.clientX + dx*ease}px, ${e.clientY + dy*ease}px) translate(-50%,-50%)`;
-          p.style.opacity = `${1-ease}`;
-          requestAnimationFrame(tick);
-        })();
-      }
-    });
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.life = 1;
+                this.size = Math.random() * 3 + 2;
+                this.hue = hue;
+                this.angle = Math.random() * Math.PI * 2;
+                this.rotation = (Math.random() - 0.5) * 0.2;
+            }
 
-    setTimeout(()=>{ dot.style.transition='transform 600ms cubic-bezier(.2,.9,.28,1), opacity 300ms'; halo.style.transition='transform 900ms cubic-bezier(.2,.9,.28,1), opacity 400ms'; dot.style.opacity=1; halo.style.opacity=0.85; },300);
-  </script>
+            update() {
+                const dx = portal.x - this.x;
+                const dy = portal.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const force = Math.max(0, 1 - dist / 300);
+                
+                this.vx += (dx / dist) * force * 0.5;
+                this.vy += (dy / dist) * force * 0.5;
+                
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.01;
+                this.angle += this.rotation;
+
+                return this.life > 0 && dist > 5;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size * 2);
+                gradient.addColorStop(0, `hsla(${this.hue}, 100%, 70%, ${this.life})`);
+                gradient.addColorStop(0.5, `hsla(${this.hue + 30}, 100%, 60%, ${this.life * 0.5})`);
+                gradient.addColorStop(1, `hsla(${this.hue + 60}, 100%, 50%, 0)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(-this.size, -this.size, this.size * 2, this.size * 2);
+                
+                ctx.restore();
+            }
+        }
+
+        class PortalRing {
+            constructor(radius) {
+                this.radius = radius;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                this.segments = 60;
+                this.waveOffset = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.rotation += this.rotationSpeed;
+                this.waveOffset += 0.05;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(portal.x, portal.y);
+                
+                for (let i = 0; i < this.segments; i++) {
+                    const angle = (i / this.segments) * Math.PI * 2 + this.rotation;
+                    const wave = Math.sin(angle * 3 + this.waveOffset) * 10;
+                    const r = this.radius + wave;
+                    
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r * 0.3;
+                    
+                    const alpha = 0.3 - (this.radius / 300);
+                    const particleHue = (hue + (i / this.segments) * 60) % 360;
+                    
+                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
+                    gradient.addColorStop(0, `hsla(${particleHue}, 100%, 70%, ${alpha})`);
+                    gradient.addColorStop(1, `hsla(${particleHue}, 100%, 50%, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        // Initialize
+        for (let i = 0; i < 500; i++) {
+            stars.push(new Star());
+        }
+
+        for (let i = 0; i < 8; i++) {
+            portalRings.push(new PortalRing(50 + i * 30));
+        }
+
+        function drawPortalCore() {
+            ctx.save();
+            ctx.translate(portal.x, portal.y);
+            
+            // Black hole center
+            const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 80);
+            coreGradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+            coreGradient.addColorStop(0.3, `hsla(${hue}, 100%, 50%, 0.8)`);
+            coreGradient.addColorStop(0.6, `hsla(${hue + 60}, 100%, 60%, 0.4)`);
+            coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, 80, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Event horizon glow
+            ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.6)`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < 50; i++) {
+                const angle = (i / 50) * Math.PI * 2;
+                const wave = Math.sin(angle * 5 + time * 0.1) * 5;
+                const r = 40 + wave;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r * 0.3;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function spawnBurst(x, y) {
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(x, y));
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 10, 0.2)';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Background gradient
+            const bgGradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, w);
+            bgGradient.addColorStop(0, `hsla(${hue}, 50%, 10%, 0.1)`);
+            bgGradient.addColorStop(1, 'rgba(0, 0, 5, 0.1)');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, w, h);
+            
+            // Update portal position (smooth follow)
+            portal.x += (mouse.x - portal.x) * 0.05;
+            portal.y += (mouse.y - portal.y) * 0.05;
+            
+            // Draw stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            
+            // Draw portal rings
+            portalRings.forEach(ring => {
+                ring.update();
+                ring.draw();
+            });
+            
+            // Draw portal core
+            drawPortalCore();
+            
+            // Update and draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (!particles[i].update()) {
+                    particles.splice(i, 1);
+                } else {
+                    particles[i].draw();
+                }
+            }
+            
+            // Spawn ambient particles
+            if (Math.random() < 0.3) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 200 + Math.random() * 300;
+                particles.push(new Particle(
+                    portal.x + Math.cos(angle) * dist,
+                    portal.y + Math.sin(angle) * dist
+                ));
+            }
+            
+            hue = (hue + 0.5) % 360;
+            time++;
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        window.addEventListener('resize', () => {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            portal.x = w / 2;
+            portal.y = h / 2;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            mouse.down = true;
+            spawnBurst(e.clientX, e.clientY);
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            mouse.down = false;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            spawnBurst(e.clientX, e.clientY);
+        });
+
+        animate();
+    </script>
 </body>
 </html>
