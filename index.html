@@ -1,38 +1,270 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>wala lang</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Elegant Mouse Follower — Demo</title>
+  <style>
+    :root{
+      --bg:#0f1724; /* deep navy */
+      --accent1: #7c5cff; /* violet */
+      --accent2: #24d2ff; /* aqua */
+      --glass: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.65);
+    }
+    /* page layout */
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,0.10), transparent),
+                  radial-gradient(1000px 500px at 90% 90%, rgba(36,210,255,0.06), transparent),
+                  var(--bg);
+      color: #e6eef8;
+      overflow:hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .card{
+      width:min(980px, 92vw);
+      padding: clamp(24px, 4vw, 48px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-radius:20px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+      backdrop-filter: blur(8px) saturate(120%);
+      border: 1px solid rgba(255,255,255,0.04);
+      position:relative;
+      overflow:visible;
+    }
+
+    h1{
+      margin:0 0 8px 0;
+      font-weight:700;
+      letter-spacing:-0.02em;
+      font-size:clamp(20px, 3.2vw, 32px);
+      color: white;
+    }
+    p.lead{
+      margin:0 0 18px 0;
+      color:var(--muted);
+      font-size:clamp(13px, 2vw, 16px);
+    }
+
+    .controls{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;
+    }
+    .btn{
+      appearance:none;border:0;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#041024;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(9,10,21,0.45);
+    }
+    .btn.ghost{
+      background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);
+    }
+
+    /* hide real cursor so custom follower is visible */
+    .hide-cursor{ cursor:none; }
+
+    /* The custom cursor container */
+    .cursor-layer{
+      position:fixed;left:0;top:0;pointer-events:none;width:100%;height:100%;z-index:9999;mix-blend-mode:screen;
+    }
+
+    /* main nucleus */
+    .dot{
+      position: absolute; width:22px;height:22px; border-radius:50%; transform:translate(-50%,-50%);
+      box-shadow: 0 8px 20px rgba(2,10,30,0.6), 0 1px 0 rgba(255,255,255,0.06) inset;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.2) 15%, transparent 60%),
+                  linear-gradient(135deg,var(--accent1),var(--accent2));
+      transition: width 220ms ease, height 220ms ease, opacity 220ms ease, transform 220ms ease;
+      will-change: transform, width, height, opacity;
+    }
+
+    /* halo */
+    .halo{
+      position:absolute; width:120px;height:120px;border-radius:50%;transform:translate(-50%,-50%);
+      background: radial-gradient(circle, rgba(124,92,255,0.18), rgba(36,210,255,0.08) 40%, transparent 60%);
+      filter: blur(18px);
+      opacity:0.9;pointer-events:none;mix-blend-mode:screen;
+    }
+
+    /* trailing small orbs */
+    .trail{
+      position:absolute; width:10px;height:10px;border-radius:50%; transform:translate(-50%,-50%);
+      background: linear-gradient(135deg, rgba(124,92,255,0.95), rgba(36,210,255,0.95));
+      box-shadow: 0 6px 18px rgba(2,8,20,0.6);
+      opacity:0.95; will-change: transform, opacity;
+    }
+
+    /* subtle footer */
+    .meta{ position:absolute; right:20px; bottom:14px; font-size:12px; color:rgba(255,255,255,0.45); }
+
+    /* responsive adjustments */
+    @media (max-width:600px){
+      .dot{ width:16px;height:16px; }
+      .halo{ width:88px;height:88px; }
+    }
+  </style>
 </head>
-<body>
-  <button id="loginBtn">Login</button>
+<body class="hide-cursor">
+  <div class="card" role="main" aria-label="Mouse follower demo">
+    <h1>Interactive Mouse Follower</h1>
+    <p class="lead">Move your mouse — the elegant cursor will follow with a smooth nucleus, halo and graceful trailing orbs. Click to create an energetic burst.</p>
+
+    <div class="controls">
+      <button class="btn" id="toggleTrail">Toggle Trail</button>
+      <button class="btn ghost" id="resetBtn">Reset</button>
+      <div style="flex:1"></div>
+      <span style="font-size:13px;color:var(--muted)">Smooth · Performant · Accessible</span>
+    </div>
+    <div class="meta">Designed with requestAnimationFrame · No frameworks</div>
+  </div>
+
+  <!-- cursor overlay -->
+  <div class="cursor-layer" id="layer">
+    <div id="halo" class="halo" style="left:50%;top:50%;opacity:0"></div>
+    <div id="dot" class="dot" style="left:50%;top:50%;opacity:0"></div>
+    <!-- trails will be generated by JS -->
+  </div>
 
   <script>
-    const messages = [
-      "Gagi wag!",
-      "Wait lang?",
-      "Di ka pa rin nadala?",
-      "Pindot ka pa!",
-      "HAHAHA!",
-      "Ayun na naman oh!",
-      "Teka lang!",
-      "Stop na baka maadik ka!",
-      "Sige pa pindot lang!",
-      "Ano bang ginagawa mo?"
-    ];
+    // Configuration
+    const TRAIL_COUNT = 12;         // number of trailing orbs
+    const LERP = 0.18;             // follow smoothing
+    const TRAIL_LERP = 0.12;       // trail smoothing
+    const BURST_PARTICLES = 18;    // on click burst
 
-    function randomMessage() {
-      return messages[Math.floor(Math.random() * messages.length)];
+    // state
+    let mouse = {x: window.innerWidth/2, y: window.innerHeight/2};
+    let dotPos = {x: mouse.x, y: mouse.y};
+    let haloPos = {x: mouse.x, y: mouse.y};
+    let trails = [];
+    let trailEnabled = true;
+
+    const layer = document.getElementById('layer');
+    const dot = document.getElementById('dot');
+    const halo = document.getElementById('halo');
+
+    // create trailing elements
+    for(let i=0;i<TRAIL_COUNT;i++){
+      const el = document.createElement('div');
+      el.className = 'trail';
+      el.style.width = el.style.height = `${8 + (i/TRAIL_COUNT)*14}px`;
+      el.style.opacity = `${0.8 - (i/TRAIL_COUNT)*0.65}`;
+      layer.appendChild(el);
+      trails.push({el, x: mouse.x, y: mouse.y, vx:0, vy:0});
     }
 
-    function infiniteAlerts() {
-      alert(randomMessage());
-      // Automatically trigger another alert after user clicks OK
-      setTimeout(infiniteAlerts, 100);
+    function onMove(e){
+      mouse.x = e.clientX; mouse.y = e.clientY;
+      halo.style.opacity = 1; dot.style.opacity = 1;
+    }
+    function onLeave(){ halo.style.opacity = 0; dot.style.opacity = 0; }
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('mouseout', onLeave);
+
+    // ease function
+    function lerp(a,b,t){ return a + (b-a)*t; }
+
+    // main loop
+    function animate(){
+      // move nucleus
+      dotPos.x = lerp(dotPos.x, mouse.x, LERP);
+      dotPos.y = lerp(dotPos.y, mouse.y, LERP);
+      dot.style.transform = `translate(${dotPos.x}px, ${dotPos.y}px) translate(-50%, -50%)`;
+
+      // halo follows slower and scales with speed
+      haloPos.x = lerp(haloPos.x, mouse.x, LERP*0.6);
+      haloPos.y = lerp(haloPos.y, mouse.y, LERP*0.6);
+
+      const speed = Math.hypot(dotPos.x - mouse.x, dotPos.y - mouse.y);
+      const haloScale = Math.min(1.6, 1 + speed/80);
+      halo.style.transform = `translate(${haloPos.x}px, ${haloPos.y}px) translate(-50%, -50%) scale(${haloScale})`;
+
+      // trails
+      for(let i=0;i<trails.length;i++){
+        const t = trails[i];
+        const targetX = i===0 ? dotPos.x : trails[i-1].x;
+        const targetY = i===0 ? dotPos.y : trails[i-1].y;
+        t.x = lerp(t.x, targetX, TRAIL_LERP + i*0.01);
+        t.y = lerp(t.y, targetY, TRAIL_LERP + i*0.01);
+        t.el.style.transform = `translate(${t.x}px, ${t.y}px) translate(-50%, -50%)`;
+        // subtle scale based on index
+        const s = 0.85 - (i/trails.length)*0.6;
+        t.el.style.opacity = `${0.9 - (i/trails.length)*0.8}`;
+        t.el.style.width = `${8 + (i/trails.length)*16 * s}px`;
+        t.el.style.height = t.el.style.width;
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // Click burst
+    function burst(x,y){
+      for(let i=0;i<BURST_PARTICLES;i++){
+        const p = document.createElement('div');
+        p.className='trail';
+        const size = 6 + Math.random()*12;
+        p.style.width = p.style.height = size+'px';
+        p.style.opacity = '1';
+        p.style.left = x+'px'; p.style.top = y+'px';
+        layer.appendChild(p);
+        const angle = Math.PI*2*(i/BURST_PARTICLES) + (Math.random()-0.5)*0.8;
+        const speed = 40 + Math.random()*120;
+        const dx = Math.cos(angle)*speed; const dy = Math.sin(angle)*speed;
+        const life = 700 + Math.random()*700;
+        const start = performance.now();
+        (function tick(){
+          const t = (performance.now()-start)/life;
+          if(t>=1){ p.remove(); return; }
+          const ease = 1 - (--t)*t*t*t; // ease out
+          p.style.transform = `translate(${x + dx*ease}px, ${y + dy*ease}px) translate(-50%,-50%)`;
+          p.style.opacity = `${1 - ease}`;
+          requestAnimationFrame(tick);
+        })();
+      }
     }
 
-    document.getElementById("loginBtn").onclick = function() {
-      infiniteAlerts();
-    };
+    window.addEventListener('click',(e)=> burst(e.clientX,e.clientY));
+
+    // controls
+    document.getElementById('toggleTrail').addEventListener('click',()=>{
+      trailEnabled = !trailEnabled;
+      trails.forEach((t,i)=> t.el.style.display = trailEnabled? 'block' : 'none');
+      document.getElementById('toggleTrail').textContent = trailEnabled? 'Toggle Trail' : 'Show Trail';
+    });
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+      // remove any extra particles
+      document.querySelectorAll('.cursor-layer .trail').forEach((el,idx)=>{
+        if(idx>=TRAIL_COUNT) el.remove();
+      });
+    });
+
+    // performance: throttle on mobile
+    function detectMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
+    if(detectMobile()){
+      // reduce trails and sizes on mobile
+      trails.forEach((t,i)=>{
+        t.el.style.width = t.el.style.height = '8px';
+      });
+    }
+
+    // accessibility: allow keyboard focus to show the cursor
+    window.addEventListener('keydown',(e)=>{
+      if(e.key==='Tab'){ document.body.classList.remove('hide-cursor'); }
+    });
+
+    // initial subtle intro animation
+    setTimeout(()=>{
+      dot.style.transition = 'transform 600ms cubic-bezier(.2,.9,.28,1), opacity 300ms';
+      halo.style.transition = 'transform 900ms cubic-bezier(.2,.9,.28,1), opacity 400ms';
+      dot.style.opacity = 1; halo.style.opacity = 0.85;
+    },300);
   </script>
 </body>
 </html>
