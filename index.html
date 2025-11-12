@@ -1,12 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>THE BORED WEB</title>
+  <title>wala lang</title>
+  <style>
+    body {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+    button {
+      position: absolute;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-<button onclick="alert('gagi wag')"> Login</button>
+  <button id="loginBtn" style="left:50%; top:50%; transform:translate(-50%, -50%)">Login</button>
 
+  <script>
+    const messages = [
+      "Gagi wag!",
+      "Huy seryoso ka ba?",
+      "Di mo pa rin nadala?",
+      "Pindot ka pa!",
+      "HAHA tuloy tuloy!",
+      "Ayun na naman oh!",
+      "Walang katapusan!",
+      "Stop na baka maadik ka",
+      "Sige pa pindot lang",
+      "Ano bang ginagawa mo?"
+    ];
 
-</button>
+    function randomMessage() {
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
+    function createRandomButton() {
+      const btn = document.createElement("button");
+      btn.textContent = "Login";
+      const x = Math.random() * (window.innerWidth - 100);
+      const y = Math.random() * (window.innerHeight - 50);
+      btn.style.left = `${x}px`;
+      btn.style.top = `${y}px`;
+
+      btn.onclick = function() {
+        alert(randomMessage());
+        createRandomButton(); // Create another alert button after alert closes
+      };
+      document.body.appendChild(btn);
+    }
+
+    // First button behavior
+    document.getElementById("loginBtn").onclick = function() {
+      alert(randomMessage());
+      createRandomButton();
+    };
+  </script>
 </body>
 </html>
