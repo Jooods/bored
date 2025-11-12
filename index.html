@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Interactive Universe Portal</title>
+    <title>Strike Zone - FPS Game</title>
     <style>
         * {
             margin: 0;
@@ -14,301 +14,493 @@
         body {
             overflow: hidden;
             background: #000;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', monospace;
         }
 
-        canvas {
+        #gameCanvas {
             display: block;
-            cursor: crosshair;
+            cursor: none;
         }
 
-        .info {
+        .hud {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-            text-align: center;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .title {
-            font-size: 32px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
             font-weight: bold;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradientShift 3s ease infinite;
-            margin-bottom: 10px;
         }
 
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+        .health {
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
         }
 
-        .controls {
+        .ammo {
+            bottom: 40px;
+            right: 20px;
+            font-size: 28px;
+        }
+
+        .score {
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #0f0;
+            box-shadow: 0 0 5px #0f0;
+        }
+
+        .crosshair::before {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .crosshair::after {
+            left: 50%;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+
+        .menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #0f0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .menu h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #0f0;
+        }
+
+        .menu button {
+            background: transparent;
+            border: 2px solid #0f0;
+            color: #0f0;
+            padding: 15px 40px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 10px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        .menu button:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #f00;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 2px solid #f00;
+            box-shadow: 0 0 20px #f00;
+        }
+
+        .gameOver h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .instruction {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
+            color: rgba(0, 255, 0, 0.6);
+            font-size: 14px;
             text-align: center;
-            pointer-events: none;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="info">
-        <div class="title">UNIVERSE PORTAL</div>
-        <div>Move your mouse to control the vortex</div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="menu" class="menu">
+        <h1>STRIKE ZONE</h1>
+        <p style="margin-bottom: 20px;">Tactical FPS Combat</p>
+        <button onclick="startGame()">START MISSION</button>
+        <p style="margin-top: 30px; font-size: 14px;">
+            WASD - Move | Mouse - Aim<br>
+            Left Click - Shoot | R - Reload
+        </p>
     </div>
-    <div class="controls">
-        Click to spawn light bursts | Hold mouse for intense gravity
+
+    <div id="gameOver" class="gameOver">
+        <h2>MISSION FAILED</h2>
+        <p id="finalScore" style="font-size: 24px; margin: 20px 0;"></p>
+        <button onclick="location.reload()" style="border-color: #f00; color: #f00;">RETRY MISSION</button>
     </div>
-    <canvas id="canvas"></canvas>
+
+    <div class="crosshair hidden" id="crosshair"></div>
+    
+    <div class="hud health hidden" id="health">HP: 100</div>
+    <div class="hud ammo hidden" id="ammo">30 / 90</div>
+    <div class="hud score hidden" id="score">KILLS: 0</div>
+    <div class="instruction hidden" id="instruction">
+        Eliminate all hostile targets | Headshots deal 2x damage
+    </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
         let w = canvas.width = window.innerWidth;
         let h = canvas.height = window.innerHeight;
-        
-        const mouse = { x: w / 2, y: h / 2, down: false };
-        const stars = [];
-        const particles = [];
-        const portalRings = [];
-        let hue = 0;
-        let time = 0;
 
-        // Portal center
-        const portal = { x: w / 2, y: h / 2, size: 0 };
+        // Game state
+        let gameActive = false;
+        let player = {
+            x: w / 2,
+            y: h - 100,
+            health: 100,
+            ammo: 30,
+            reserve: 90,
+            maxAmmo: 30,
+            kills: 0,
+            reloading: false
+        };
 
-        class Star {
+        let enemies = [];
+        let bullets = [];
+        let particles = [];
+        let lastSpawn = 0;
+        let spawnRate = 2000;
+        let mouseX = w / 2;
+        let mouseY = h / 2;
+        let shooting = false;
+        let lastShot = 0;
+        let fireRate = 150;
+
+        // Keys
+        const keys = {};
+
+        class Enemy {
             constructor() {
-                this.reset();
-                this.z = Math.random() * 1000;
-            }
-
-            reset() {
-                this.x = Math.random() * w - w / 2;
-                this.y = Math.random() * h - h / 2;
-                this.z = Math.random() * 1000;
-                this.size = Math.random() * 2;
-                this.pulseSpeed = Math.random() * 0.02 + 0.01;
-                this.pulseOffset = Math.random() * Math.PI * 2;
+                this.w = 40 + Math.random() * 20;
+                this.h = 80 + Math.random() * 40;
+                this.x = Math.random() * (w - this.w);
+                this.y = -this.h;
+                this.speed = 0.5 + Math.random() * 1.5;
+                this.health = 2;
+                this.color = `hsl(${Math.random() * 60}, 70%, 50%)`;
+                this.shootTimer = 0;
+                this.shootCooldown = 2000 + Math.random() * 2000;
+                this.headY = this.y + this.h * 0.2;
             }
 
             update() {
-                this.z -= 2 + (mouse.down ? 5 : 0);
-                if (this.z <= 0) this.reset();
+                this.y += this.speed;
+                this.headY = this.y + this.h * 0.2;
+
+                // Shoot at player
+                this.shootTimer += 16;
+                if (this.shootTimer >= this.shootCooldown && this.y > 50) {
+                    this.shoot();
+                    this.shootTimer = 0;
+                }
+
+                return this.y < h + 50;
+            }
+
+            shoot() {
+                bullets.push({
+                    x: this.x + this.w / 2,
+                    y: this.y + this.h / 2,
+                    dx: (player.x - (this.x + this.w / 2)) * 0.003,
+                    dy: (player.y - (this.y + this.h / 2)) * 0.003,
+                    enemy: true,
+                    size: 4
+                });
             }
 
             draw() {
-                const scale = 1000 / this.z;
-                const x2d = this.x * scale + portal.x;
-                const y2d = this.y * scale + portal.y;
-                const size = this.size * scale;
+                ctx.save();
                 
-                const pulse = Math.sin(time * this.pulseSpeed + this.pulseOffset);
-                const brightness = 0.5 + pulse * 0.5;
+                // Body
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y + this.h * 0.3, this.w, this.h * 0.7);
+                
+                // Head
+                ctx.fillStyle = '#d4a574';
+                ctx.beginPath();
+                ctx.arc(this.x + this.w / 2, this.headY, this.w * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Weapon
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.x + this.w * 0.7, this.y + this.h * 0.5, this.w * 0.3, 4);
+                
+                // Health bar
+                ctx.fillStyle = '#f00';
+                ctx.fillRect(this.x, this.y - 10, this.w, 4);
+                ctx.fillStyle = '#0f0';
+                ctx.fillRect(this.x, this.y - 10, this.w * (this.health / 2), 4);
+                
+                ctx.restore();
+            }
 
-                if (x2d >= 0 && x2d <= w && y2d >= 0 && y2d <= h) {
-                    ctx.fillStyle = `rgba(255, 255, 255, ${brightness * (1 - this.z / 1000)})`;
-                    ctx.beginPath();
-                    ctx.arc(x2d, y2d, size, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    if (size > 1.5) {
-                        ctx.fillStyle = `rgba(200, 200, 255, ${brightness * 0.3})`;
-                        ctx.beginPath();
-                        ctx.arc(x2d, y2d, size * 2, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                }
+            hit(headshot = false) {
+                this.health -= headshot ? 2 : 1;
+                return this.health <= 0;
             }
         }
 
         class Particle {
-            constructor(x, y) {
+            constructor(x, y, color) {
                 this.x = x;
                 this.y = y;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
+                this.vx = (Math.random() - 0.5) * 5;
+                this.vy = (Math.random() - 0.5) * 5 - 2;
                 this.life = 1;
+                this.color = color;
                 this.size = Math.random() * 3 + 2;
-                this.hue = hue;
-                this.angle = Math.random() * Math.PI * 2;
-                this.rotation = (Math.random() - 0.5) * 0.2;
             }
 
             update() {
-                const dx = portal.x - this.x;
-                const dy = portal.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const force = Math.max(0, 1 - dist / 300);
-                
-                this.vx += (dx / dist) * force * 0.5;
-                this.vy += (dy / dist) * force * 0.5;
-                
-                this.vx *= 0.98;
-                this.vy *= 0.98;
-                
                 this.x += this.vx;
                 this.y += this.vy;
-                this.life -= 0.01;
-                this.angle += this.rotation;
-
-                return this.life > 0 && dist > 5;
+                this.vy += 0.2;
+                this.life -= 0.02;
+                return this.life > 0;
             }
 
             draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-                
-                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size * 2);
-                gradient.addColorStop(0, `hsla(${this.hue}, 100%, 70%, ${this.life})`);
-                gradient.addColorStop(0.5, `hsla(${this.hue + 30}, 100%, 60%, ${this.life * 0.5})`);
-                gradient.addColorStop(1, `hsla(${this.hue + 60}, 100%, 50%, 0)`);
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(-this.size, -this.size, this.size * 2, this.size * 2);
-                
-                ctx.restore();
+                ctx.fillStyle = `${this.color}${Math.floor(this.life * 255).toString(16).padStart(2, '0')}`;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
             }
         }
 
-        class PortalRing {
-            constructor(radius) {
-                this.radius = radius;
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
-                this.segments = 60;
-                this.waveOffset = Math.random() * Math.PI * 2;
+        function spawnEnemy() {
+            enemies.push(new Enemy());
+        }
+
+        function shoot() {
+            if (!gameActive || player.reloading || player.ammo <= 0) return;
+            
+            const now = Date.now();
+            if (now - lastShot < fireRate) return;
+            
+            lastShot = now;
+            player.ammo--;
+            updateHUD();
+
+            // Muzzle flash
+            for (let i = 0; i < 10; i++) {
+                particles.push(new Particle(mouseX, mouseY, '#ff0'));
             }
 
-            update() {
-                this.rotation += this.rotationSpeed;
-                this.waveOffset += 0.05;
+            // Bullet
+            const angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+            bullets.push({
+                x: player.x,
+                y: player.y,
+                dx: Math.cos(angle) * 8,
+                dy: Math.sin(angle) * 8,
+                enemy: false,
+                size: 3
+            });
+        }
+
+        function reload() {
+            if (player.reloading || player.ammo === player.maxAmmo || player.reserve === 0) return;
+            
+            player.reloading = true;
+            document.getElementById('ammo').style.color = '#ff0';
+            
+            setTimeout(() => {
+                const needed = player.maxAmmo - player.ammo;
+                const toReload = Math.min(needed, player.reserve);
+                player.ammo += toReload;
+                player.reserve -= toReload;
+                player.reloading = false;
+                document.getElementById('ammo').style.color = '#0f0';
+                updateHUD();
+            }, 1500);
+        }
+
+        function updateHUD() {
+            document.getElementById('health').textContent = `HP: ${player.health}`;
+            document.getElementById('ammo').textContent = `${player.ammo} / ${player.reserve}`;
+            document.getElementById('score').textContent = `KILLS: ${player.kills}`;
+            
+            const healthEl = document.getElementById('health');
+            if (player.health <= 30) {
+                healthEl.style.color = '#f00';
+            } else if (player.health <= 60) {
+                healthEl.style.color = '#ff0';
+            } else {
+                healthEl.style.color = '#0f0';
+            }
+        }
+
+        function gameLoop(timestamp) {
+            if (!gameActive) return;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, w, h);
+
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, h / 2);
+            gradient.addColorStop(0, '#001a33');
+            gradient.addColorStop(1, '#003366');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h / 2);
+
+            // Ground
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, h / 2, w, h / 2);
+
+            // Grid lines (ground)
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 20; i++) {
+                const y = h / 2 + (i * 30);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
             }
 
-            draw() {
-                ctx.save();
-                ctx.translate(portal.x, portal.y);
-                
-                for (let i = 0; i < this.segments; i++) {
-                    const angle = (i / this.segments) * Math.PI * 2 + this.rotation;
-                    const wave = Math.sin(angle * 3 + this.waveOffset) * 10;
-                    const r = this.radius + wave;
-                    
-                    const x = Math.cos(angle) * r;
-                    const y = Math.sin(angle) * r * 0.3;
-                    
-                    const alpha = 0.3 - (this.radius / 300);
-                    const particleHue = (hue + (i / this.segments) * 60) % 360;
-                    
-                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
-                    gradient.addColorStop(0, `hsla(${particleHue}, 100%, 70%, ${alpha})`);
-                    gradient.addColorStop(1, `hsla(${particleHue}, 100%, 50%, 0)`);
-                    
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 4, 0, Math.PI * 2);
-                    ctx.fill();
+            // Spawn enemies
+            if (timestamp - lastSpawn > spawnRate) {
+                spawnEnemy();
+                lastSpawn = timestamp;
+                spawnRate = Math.max(800, spawnRate - 50);
+            }
+
+            // Update and draw enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                if (!enemy.update()) {
+                    enemies.splice(i, 1);
+                    continue;
                 }
-                
-                ctx.restore();
+                enemy.draw();
             }
-        }
 
-        // Initialize
-        for (let i = 0; i < 500; i++) {
-            stars.push(new Star());
-        }
+            // Update and draw bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                bullet.x += bullet.dx;
+                bullet.y += bullet.dy;
 
-        for (let i = 0; i < 8; i++) {
-            portalRings.push(new PortalRing(50 + i * 30));
-        }
+                // Check collisions
+                if (!bullet.enemy) {
+                    // Player bullet
+                    for (let j = enemies.length - 1; j >= 0; j--) {
+                        const enemy = enemies[j];
+                        const isHeadshot = bullet.x > enemy.x && 
+                                         bullet.x < enemy.x + enemy.w &&
+                                         bullet.y > enemy.headY - enemy.w * 0.4 &&
+                                         bullet.y < enemy.headY + enemy.w * 0.4;
+                        
+                        const isBodyshot = !isHeadshot && 
+                                         bullet.x > enemy.x && 
+                                         bullet.x < enemy.x + enemy.w &&
+                                         bullet.y > enemy.y &&
+                                         bullet.y < enemy.y + enemy.h;
 
-        function drawPortalCore() {
-            ctx.save();
-            ctx.translate(portal.x, portal.y);
-            
-            // Black hole center
-            const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 80);
-            coreGradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
-            coreGradient.addColorStop(0.3, `hsla(${hue}, 100%, 50%, 0.8)`);
-            coreGradient.addColorStop(0.6, `hsla(${hue + 60}, 100%, 60%, 0.4)`);
-            coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            
-            ctx.fillStyle = coreGradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, 80, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Event horizon glow
-            ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.6)`;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            for (let i = 0; i < 50; i++) {
-                const angle = (i / 50) * Math.PI * 2;
-                const wave = Math.sin(angle * 5 + time * 0.1) * 5;
-                const r = 40 + wave;
-                const x = Math.cos(angle) * r;
-                const y = Math.sin(angle) * r * 0.3;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                        if (isHeadshot || isBodyshot) {
+                            if (enemy.hit(isHeadshot)) {
+                                player.kills++;
+                                updateHUD();
+                                enemies.splice(j, 1);
+                                
+                                // Death particles
+                                for (let k = 0; k < 30; k++) {
+                                    particles.push(new Particle(
+                                        enemy.x + enemy.w / 2,
+                                        enemy.y + enemy.h / 2,
+                                        isHeadshot ? '#f00' : '#ff0'
+                                    ));
+                                }
+                            } else {
+                                // Hit particles
+                                for (let k = 0; k < 10; k++) {
+                                    particles.push(new Particle(bullet.x, bullet.y, '#f00'));
+                                }
+                            }
+                            bullets.splice(i, 1);
+                            break;
+                        }
+                    }
+                } else {
+                    // Enemy bullet
+                    const dist = Math.sqrt(
+                        Math.pow(bullet.x - player.x, 2) + 
+                        Math.pow(bullet.y - player.y, 2)
+                    );
+                    if (dist < 30) {
+                        player.health -= 10;
+                        updateHUD();
+                        bullets.splice(i, 1);
+                        
+                        if (player.health <= 0) {
+                            endGame();
+                        }
+                        
+                        for (let k = 0; k < 15; k++) {
+                            particles.push(new Particle(bullet.x, bullet.y, '#f00'));
+                        }
+                        continue;
+                    }
+                }
+
+                // Remove off-screen bullets
+                if (bullet.x < 0 || bullet.x > w || bullet.y < 0 || bullet.y > h) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                // Draw bullet
+                ctx.fillStyle = bullet.enemy ? '#f00' : '#0ff';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = bullet.enemy ? '#f00' : '#0ff';
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
             }
-            ctx.closePath();
-            ctx.stroke();
-            
-            ctx.restore();
-        }
 
-        function spawnBurst(x, y) {
-            for (let i = 0; i < 30; i++) {
-                particles.push(new Particle(x, y));
-            }
-        }
-
-        function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 10, 0.2)';
-            ctx.fillRect(0, 0, w, h);
-            
-            // Background gradient
-            const bgGradient = ctx.createRadialGradient(portal.x, portal.y, 0, portal.x, portal.y, w);
-            bgGradient.addColorStop(0, `hsla(${hue}, 50%, 10%, 0.1)`);
-            bgGradient.addColorStop(1, 'rgba(0, 0, 5, 0.1)');
-            ctx.fillStyle = bgGradient;
-            ctx.fillRect(0, 0, w, h);
-            
-            // Update portal position (smooth follow)
-            portal.x += (mouse.x - portal.x) * 0.05;
-            portal.y += (mouse.y - portal.y) * 0.05;
-            
-            // Draw stars
-            stars.forEach(star => {
-                star.update();
-                star.draw();
-            });
-            
-            // Draw portal rings
-            portalRings.forEach(ring => {
-                ring.update();
-                ring.draw();
-            });
-            
-            // Draw portal core
-            drawPortalCore();
-            
             // Update and draw particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 if (!particles[i].update()) {
@@ -317,49 +509,76 @@
                     particles[i].draw();
                 }
             }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('crosshair').classList.remove('hidden');
+            document.getElementById('health').classList.remove('hidden');
+            document.getElementById('ammo').classList.remove('hidden');
+            document.getElementById('score').classList.remove('hidden');
+            document.getElementById('instruction').classList.remove('hidden');
             
-            // Spawn ambient particles
-            if (Math.random() < 0.3) {
-                const angle = Math.random() * Math.PI * 2;
-                const dist = 200 + Math.random() * 300;
-                particles.push(new Particle(
-                    portal.x + Math.cos(angle) * dist,
-                    portal.y + Math.sin(angle) * dist
-                ));
-            }
+            gameActive = true;
+            player.health = 100;
+            player.ammo = 30;
+            player.reserve = 90;
+            player.kills = 0;
+            enemies = [];
+            bullets = [];
+            particles = [];
+            lastSpawn = 0;
+            spawnRate = 2000;
             
-            hue = (hue + 0.5) % 360;
-            time++;
-            requestAnimationFrame(animate);
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById('finalScore').textContent = `Total Kills: ${player.kills}`;
+            document.getElementById('gameOver').style.display = 'block';
         }
 
         // Event listeners
         window.addEventListener('resize', () => {
             w = canvas.width = window.innerWidth;
             h = canvas.height = window.innerHeight;
-            portal.x = w / 2;
-            portal.y = h / 2;
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            mouseX = e.clientX;
+            mouseY = e.clientY;
         });
 
-        canvas.addEventListener('mousedown', (e) => {
-            mouse.down = true;
-            spawnBurst(e.clientX, e.clientY);
+        canvas.addEventListener('mousedown', () => {
+            shooting = true;
+            shoot();
         });
 
         canvas.addEventListener('mouseup', () => {
-            mouse.down = false;
+            shooting = false;
         });
 
-        canvas.addEventListener('click', (e) => {
-            spawnBurst(e.clientX, e.clientY);
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key.toLowerCase() === 'r') {
+                reload();
+            }
         });
 
-        animate();
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Auto-fire when holding mouse
+        setInterval(() => {
+            if (shooting && gameActive) {
+                shoot();
+            }
+        }, fireRate);
     </script>
 </body>
 </html>
