@@ -1,746 +1,583 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook</title>
-    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📘</text></svg>">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Navigation Cards</title>
+        <link rel="icon" type="image/png" href="logo.jpg">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #050505;
-        }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 40px 20px;
+            }
 
-        /* Header */
-        .header {
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            height: 56px;
-        }
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+            }
 
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            height: 100%;
-            max-width: 100%;
-        }
+            .header {
+                text-align: center;
+                margin-bottom: 50px;
+            }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+            h1 {
+                color: white;
+                font-size: 3rem;
+                margin-bottom: 15px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            }
 
-        .fb-logo {
-            width: 40px;
-            height: 40px;
-            background: #1877f2;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 24px;
-            cursor: pointer;
-        }
+            .subtitle {
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 1.2rem;
+            }
 
-        .search-bar {
-            background-color: #f0f2f5;
-            border-radius: 50px;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 240px;
-        }
+            .cards-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 30px;
+                padding: 20px;
+            }
 
-        .search-bar input {
-            border: none;
-            background: none;
-            outline: none;
-            font-size: 15px;
-            width: 100%;
-        }
+            .card {
+                background: white;
+                border-radius: 20px;
+                padding: 35px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                position: relative;
+                overflow: hidden;
+                border: 3px solid transparent;
+            }
 
-        .header-center {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            justify-content: center;
-            max-width: 600px;
-        }
+            .card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 5px;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+            }
 
-        .nav-item {
-            padding: 0 40px;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            position: relative;
-        }
+            .card:hover {
+                transform: translateY(-10px) scale(1.02);
+                box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+                border-color: #667eea;
+            }
 
-        .nav-item:hover {
-            background-color: #f0f2f5;
-            border-radius: 8px 8px 0 0;
-        }
+            .card:hover::before {
+                transform: scaleX(1);
+            }
 
-        .nav-item.active {
-            border-bottom-color: #1877f2;
-        }
+            .card:active {
+                transform: translateY(-5px) scale(1.01);
+            }
 
-        .nav-item svg {
-            width: 28px;
-            height: 28px;
-            fill: #65676b;
-        }
+            .card-icon {
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                border-radius: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 25px;
+                font-size: 40px;
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+                transition: transform 0.3s ease;
+            }
 
-        .nav-item.active svg {
-            fill: #1877f2;
-        }
+            .card:hover .card-icon {
+                transform: scale(1.1) rotate(5deg);
+            }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+            .card-title {
+                font-size: 1.75rem;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 15px;
+            }
 
-        .header-icon {
-            width: 40px;
-            height: 40px;
-            background-color: #e4e6eb;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
+            .card-description {
+                color: #666;
+                font-size: 1rem;
+                line-height: 1.7;
+                margin-bottom: 20px;
+            }
 
-        .header-icon:hover {
-            background-color: #d8dadf;
-        }
+            .card-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+            }
 
-        .profile-pic {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
+            .card-link {
+                display: inline-flex;
+                align-items: center;
+                color: #667eea;
+                font-weight: 600;
+                text-decoration: none;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                padding: 8px 16px;
+                border-radius: 8px;
+                background: rgba(102, 126, 234, 0.1);
+            }
 
-        /* Main Content */
-        .main-container {
-            display: flex;
-            margin-top: 56px;
-            max-width: 1920px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+            .card-link:hover {
+                color: white;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+            }
 
-        /* Left Sidebar */
-        .left-sidebar {
-            width: 360px;
-            padding: 20px 8px;
-            position: fixed;
-            height: calc(100vh - 56px);
-            overflow-y: auto;
-        }
+            .card-link svg {
+                margin-left: 8px;
+                transition: transform 0.3s ease;
+            }
 
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 4px;
-        }
+            .card:hover .card-link svg {
+                transform: translateX(5px);
+            }
 
-        .sidebar-item:hover {
-            background-color: #e4e6eb;
-        }
+            .click-hint {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #999;
+                font-size: 0.85rem;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
 
-        .sidebar-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #e4e6eb;
-        }
+            .card:hover .click-hint {
+                opacity: 1;
+            }
 
-        .sidebar-text {
-            font-size: 15px;
-            font-weight: 500;
-        }
+            .badge {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                color: white;
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                box-shadow: 0 3px 10px rgba(245, 87, 108, 0.3);
+            }
 
-        /* Center Feed */
-        .center-feed {
-            flex: 1;
-            margin-left: 360px;
-            margin-right: 360px;
-            padding: 20px 0;
-            max-width: 680px;
-        }
+            /* Ripple effect */
+            .ripple {
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(102, 126, 234, 0.4);
+                transform: scale(0);
+                animation: ripple-animation 0.6s ease-out;
+                pointer-events: none;
+            }
 
-        /* Stories */
-        .stories-container {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            overflow-x: auto;
-            padding: 4px;
-        }
+            @keyframes ripple-animation {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
 
-        .story {
-            min-width: 112px;
-            height: 200px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-        }
+            /* Tooltip */
+            .tooltip {
+                position: fixed;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 0.85rem;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.2s;
+                z-index: 1000;
+                white-space: nowrap;
+            }
 
-        .story:hover {
-            transform: scale(1.03);
-            transition: transform 0.2s;
-        }
+            .tooltip.show {
+                opacity: 1;
+            }
 
-        .story-avatar {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 4px solid #1877f2;
-            background: white;
-        }
+            /* Loading indicator */
+            .loading {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px 40px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                display: none;
+                z-index: 2000;
+            }
 
-        .story-name {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 13px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
+            .loading.show {
+                display: block;
+            }
 
-        /* Create Post */
-        .create-post {
-            background: white;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
+            .loading-spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #667eea;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 15px;
+            }
 
-        .create-post-top {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e4e6eb;
-        }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
 
-        .create-post input {
-            flex: 1;
-            background-color: #f0f2f5;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 16px;
-            font-size: 15px;
-            outline: none;
-            cursor: pointer;
-        }
+            .loading-text {
+                text-align: center;
+                color: #333;
+                font-weight: 600;
+            }
 
-        .create-post input:hover {
-            background-color: #e4e6eb;
-        }
+            /* Search bar */
+            .search-container {
+                max-width: 600px;
+                margin: 0 auto 40px;
+            }
 
-        .create-post-bottom {
-            display: flex;
-            justify-content: space-around;
-        }
+            .search-box {
+                width: 100%;
+                padding: 18px 24px;
+                font-size: 1.1rem;
+                border: none;
+                border-radius: 50px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                outline: none;
+                transition: all 0.3s ease;
+            }
 
-        .post-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            flex: 1;
-            justify-content: center;
-        }
+            .search-box:focus {
+                box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+                transform: translateY(-2px);
+            }
 
-        .post-option:hover {
-            background-color: #f0f2f5;
-        }
+            .search-box::placeholder {
+                color: #999;
+            }
 
-        .post-option span {
-            font-size: 15px;
-            font-weight: 600;
-            color: #65676b;
-        }
-
-        /* Post */
-        .post {
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .post-header {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            gap: 8px;
-        }
-
-        .post-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .post-info {
-            flex: 1;
-        }
-
-        .post-author {
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .post-time {
-            font-size: 13px;
-            color: #65676b;
-        }
-
-        .post-content {
-            padding: 0 16px 12px;
-            font-size: 15px;
-            line-height: 1.3333;
-        }
-
-        .post-image {
-            width: 100%;
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            height: 400px;
-            cursor: pointer;
-        }
-
-        .post-stats {
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            color: #65676b;
-            font-size: 15px;
-            border-bottom: 1px solid #e4e6eb;
-        }
-
-        .post-actions {
-            display: flex;
-            padding: 4px 16px;
-        }
-
-        .post-action {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #65676b;
-        }
-
-        .post-action:hover {
-            background-color: #f0f2f5;
-        }
-
-        /* Right Sidebar */
-        .right-sidebar {
-            width: 360px;
-            padding: 20px 8px;
-            position: fixed;
-            right: 0;
-            height: calc(100vh - 56px);
-            overflow-y: auto;
-        }
-
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            margin-bottom: 8px;
-        }
-
-        .sidebar-title {
-            font-size: 17px;
-            font-weight: 600;
-            color: #65676b;
-        }
-
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .contact-item:hover {
-            background-color: #e4e6eb;
-        }
-
-        .contact-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            position: relative;
-        }
-
-        .online-status {
-            width: 12px;
-            height: 12px;
-            background: #31a24c;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            border: 2px solid white;
-        }
-
-        .contact-name {
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #b0b3b8;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #8a8d91;
-        }
-
-        /* Responsive */
-        @media (max-width: 1100px) {
-            .right-sidebar {
+            /* No results message */
+            .no-results {
+                text-align: center;
+                color: white;
+                font-size: 1.3rem;
+                padding: 60px 20px;
                 display: none;
             }
-            .center-feed {
-                margin-right: 0;
-            }
-        }
 
-        @media (max-width: 900px) {
-            .left-sidebar {
-                display: none;
+            .no-results.show {
+                display: block;
             }
-            .center-feed {
-                margin-left: 0;
-                padding: 20px 16px;
-            }
-        }
 
-        @media (max-width: 600px) {
-            .header-center {
-                display: none;
+            /* Responsive */
+            @media (max-width: 768px) {
+                h1 {
+                    font-size: 2.2rem;
+                }
+
+                .subtitle {
+                    font-size: 1rem;
+                }
+
+                .cards-grid {
+                    grid-template-columns: 1fr;
+                    gap: 20px;
+                }
+
+                .card {
+                    padding: 25px;
+                }
+
+                .card-icon {
+                    width: 70px;
+                    height: 70px;
+                    font-size: 35px;
+                }
+
+                .card-title {
+                    font-size: 1.5rem;
+                }
             }
-            .search-bar {
-                width: 180px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-container">
-            <div class="header-left">
-                <div class="fb-logo">f</div>
-                <div class="search-bar">
-                    <span>🔍</span>
-                    <input type="text" placeholder="Search Facebook">
-                </div>
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎓 Huawei Cloud Learning Hub</h1>
+                <p class="subtitle">Access all your study materials and sandbox labs in one place</p>
             </div>
 
-            <div class="header-center">
-                <div class="nav-item active">
-                    <svg viewBox="0 0 28 28"><path d="M25.825 12.29C25.824 12.289 25.823 12.288 25.821 12.286L15.027 2.937C14.752 2.675 14.392 2.527 13.989 2.521 13.608 2.527 13.248 2.675 13.001 2.912L2.175 12.29C1.756 12.658 1.629 13.245 1.868 13.759 2.079 14.215 2.567 14.479 3.069 14.479L5 14.479 5 23.729C5 24.695 5.784 25.479 6.75 25.479L11 25.479C11.552 25.479 12 25.031 12 24.479L12 18.309C12 18.126 12.148 17.979 12.33 17.979L15.67 17.979C15.852 17.979 16 18.126 16 18.309L16 24.479C16 25.031 16.448 25.479 17 25.479L21.25 25.479C22.217 25.479 23 24.695 23 23.729L23 14.479 24.931 14.479C25.433 14.479 25.921 14.215 26.132 13.759 26.371 13.245 26.244 12.658 25.825 12.29"></path></svg>
-                </div>
-                <div class="nav-item">
-                    <svg viewBox="0 0 28 28"><path d="M8.75 25.25C8.336 25.25 8 24.914 8 24.5 8 24.086 8.336 23.75 8.75 23.75L19.25 23.75C19.664 23.75 20 24.086 20 24.5 20 24.914 19.664 25.25 19.25 25.25L8.75 25.25ZM17.163 12.846 12.055 15.923C11.591 16.202 11 15.869 11 15.327L11 9.172C11 8.631 11.591 8.297 12.055 8.576L17.163 11.654C17.612 11.924 17.612 12.575 17.163 12.846ZM21.75 20.25C22.992 20.25 24 19.242 24 18L24 6.5C24 5.258 22.992 4.25 21.75 4.25L6.25 4.25C5.008 4.25 4 5.258 4 6.5L4 18C4 19.242 5.008 20.25 6.25 20.25L21.75 20.25ZM21.75 21.75 6.25 21.75C4.179 21.75 2.5 20.071 2.5 18L2.5 6.5C2.5 4.429 4.179 2.75 6.25 2.75L21.75 2.75C23.821 2.75 25.5 4.429 25.5 6.5L25.5 18C25.5 20.071 23.821 21.75 21.75 21.75Z"></path></svg>
-                </div>
-                <div class="nav-item">
-                    <svg viewBox="0 0 28 28"><path d="M23 4.5C23 3.119 21.881 2 20.5 2L18.563 2C17.752 2 16.995 2.37 16.5 3.008L9.411 11.671C8.89 12.345 8.89 13.29 9.411 13.964L16.5 22.627C16.995 23.265 17.752 23.635 18.563 23.635L20.5 23.635C21.881 23.635 23 22.516 23 21.135L23 4.5Z"></path><path d="M8.592 11.294C9.111 10.62 9.111 9.677 8.592 9.002L4.004 3.008C3.509 2.37 2.752 2 1.941 2L1.5 2C0.671 2 0 2.671 0 3.5L0 21.135C0 21.964 0.671 22.635 1.5 22.635L1.941 22.635C2.752 22.635 3.509 22.265 4.004 21.627L8.592 15.633C9.111 14.958 9.111 14.015 8.592 13.341L6.873 11.294 8.592 11.294Z"></path></svg>
-                </div>
-                <div class="nav-item">
-                    <svg viewBox="0 0 28 28"><path d="M17.5 23.979 21.25 23.979C21.386 23.979 21.5 23.864 21.5 23.729L21.5 13.979C21.5 13.427 21.949 12.979 22.5 12.979L24.33 12.979 14.017 4.046 3.672 12.979 5.5 12.979C6.052 12.979 6.5 13.427 6.5 13.979L6.5 23.729C6.5 23.864 6.615 23.979 6.75 23.979L10.5 23.979 10.5 17.729C10.5 17.04 11.061 16.479 11.75 16.479L16.25 16.479C16.939 16.479 17.5 17.04 17.5 17.729L17.5 23.979ZM21.25 25.479 17 25.479C16.448 25.479 16 25.031 16 24.479L16 18.327C16 18.135 15.844 17.979 15.652 17.979L12.348 17.979C12.156 17.979 12 18.135 12 18.327L12 24.479C12 25.031 11.552 25.479 11 25.479L6.75 25.479C5.784 25.479 5 24.695 5 23.729L5 14.479 3.069 14.479C2.567 14.479 2.079 14.215 1.868 13.759 1.63 13.245 1.757 12.658 2.175 12.29L13.001 2.912C13.248 2.675 13.608 2.527 13.989 2.521 14.392 2.527 14.753 2.675 15.027 2.937L25.821 12.286C25.823 12.288 25.824 12.289 25.825 12.29 26.244 12.658 26.371 13.245 26.133 13.759 25.921 14.215 25.434 14.479 24.931 14.479L23 14.479 23 23.729C23 24.695 22.217 25.479 21.25 25.479Z"></path></svg>
-                </div>
-                <div class="nav-item">
-                    <svg viewBox="0 0 28 28"><path d="M14 2.042c6.76 0 12 4.952 12 11.64S20.76 25.322 14 25.322a13.091 13.091 0 0 1-3.474-.461.956 .956 0 0 0-.641.047L7.5 25.959a.961.961 0 0 1-1.348-.849l-.065-2.134a.957.957 0 0 0-.322-.684A11.389 11.389 0 0 1 2 13.682C2 6.994 7.24 2.042 14 2.042ZM6.794 17.086a.57.57 0 0 0 .827.758l3.786-2.874a.722.722 0 0 1 .868 0l2.8 2.1a1.8 1.8 0 0 0 2.6-.481l3.525-5.592a.57.57 0 0 0-.827-.758l-3.786 2.874a.722.722 0 0 1-.868 0l-2.8-2.1a1.8 1.8 0 0 0-2.6.481Z"></path></svg>
-                </div>
+            <div class="search-container">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search for study materials or sandboxes...">
+            </div>
+            
+            <div class="cards-grid" id="cardsContainer">
+                <!-- Cards will be dynamically inserted here -->
             </div>
 
-            <div class="header-right">
-                <div class="header-icon">⚙️</div>
-                <div class="header-icon">🔔</div>
-                <div class="profile-pic">ME</div>
+            <div class="no-results" id="noResults">
+                😕 No materials found. Try searching for "sandbox", "pdf", or "reviewer".
             </div>
         </div>
-    </header>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Left Sidebar -->
-        <aside class="left-sidebar">
-            <div class="sidebar-item">
-                <div class="profile-pic">ME</div>
-                <span class="sidebar-text">My Profile</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">👥</div>
-                <span class="sidebar-text">Friends</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">👁️</div>
-                <span class="sidebar-text">Watch</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">📰</div>
-                <span class="sidebar-text">Pages</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">👥</div>
-                <span class="sidebar-text">Groups</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">🛍️</div>
-                <span class="sidebar-text">Marketplace</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">🎮</div>
-                <span class="sidebar-text">Gaming</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">📅</div>
-                <span class="sidebar-text">Events</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">⏰</div>
-                <span class="sidebar-text">Memories</span>
-            </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon">💾</div>
-                <span class="sidebar-text">Saved</span>
-            </div>
-        </aside>
+        <!-- Loading indicator -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Opening site...</div>
+        </div>
 
-        <!-- Center Feed -->
-        <main class="center-feed">
-            <!-- Stories -->
-            <div class="stories-container">
-                <div class="story">
-                    <div class="story-avatar"></div>
-                    <div class="story-name">Your Story</div>
-                </div>
-                <div class="story">
-                    <div class="story-avatar"></div>
-                    <div class="story-name">John Doe</div>
-                </div>
-                <div class="story">
-                    <div class="story-avatar"></div>
-                    <div class="story-name">Jane Smith</div>
-                </div>
-                <div class="story">
-                    <div class="story-avatar"></div>
-                    <div class="story-name">Mike Johnson</div>
-                </div>
-                <div class="story">
-                    <div class="story-avatar"></div>
-                    <div class="story-name">Sarah Wilson</div>
-                </div>
-            </div>
+        <!-- Tooltip -->
+        <div class="tooltip" id="tooltip"></div>
 
-            <!-- Create Post -->
-            <div class="create-post">
-                <div class="create-post-top">
-                    <div class="profile-pic">ME</div>
-                    <input type="text" placeholder="What's on your mind?">
-                </div>
-                <div class="create-post-bottom">
-                    <div class="post-option">
-                        <span>🎥</span>
-                        <span>Live video</span>
-                    </div>
-                    <div class="post-option">
-                        <span>📷</span>
-                        <span>Photo/video</span>
-                    </div>
-                    <div class="post-option">
-                        <span>😊</span>
-                        <span>Feeling/activity</span>
-                    </div>
-                </div>
-            </div>
+        <script>
+            // Card data - Edit this array to add/modify cards
+            const cardsData = [
+                {
+                    title: "Claude",
+                    description: "Access the Storage Services PDF documentation through Claude AI for comprehensive learning materials.",
+                    url: "https://claude.ai/chat/01933964-d2e0-8194-a8c8-b2c99cfdb4a8",
+                    icon: "📄",
+                    badge: "PDF"
+                },
+                {
+                    title: "ChatGPT",
+                    description: "Pre-registration validity documentation and materials for Huawei Cloud certification preparation.",
+                    url: "https://chatgpt.com/",
+                    icon: "💬",
+                    badge: "ChatGPT"
+                },
+                {
+                    title: "HCCDA Tech Essentials",
+                    description: "Complete reviewer and study materials for Huawei Certified Cloud Data Center Associate certification.",
+                    url: "https://connect.huaweicloud.com/intl/en-us/courses/learn/Learning/sp:cloudEdu_en?courseNo=C101692237687889160&courseType=1",
+                    icon: "📚",
+                    badge: "Reviewer"
+                },
+                {
+                    title: "ELB KOOLAB",
+                    description: "Interactive practice labs and hands-on exercises for Huawei Cloud services and certification preparation.",
+                    url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1765",
+                    icon: "🧪",
+                    badge: "Labs"
+                },
+                {
+                    title: "Compute Services",
+                    description: "Hands-on lab environment for practicing Huawei Cloud compute services including ECS and related features.",
+                    url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1771",
+                    icon: "💻",
+                    badge: "Sandbox"
+                },
+                {
+                    title: "Storage Services",
+                    description: "Interactive lab for exploring OBS, EVS, and other Huawei Cloud storage solutions with practical exercises.",
+                    url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1844",
+                    icon: "💾",
+                    badge: "Sandbox"
+                },
+                {
+                    title: "VPC Basics",
+                    description: "Learn Virtual Private Cloud fundamentals through hands-on practice in a safe sandbox environment.",
+                    url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1880",
+                    icon: "🌐",
+                    badge: "Sandbox"
+                },
+                {
+                    title: "Database Services",
+                    description: "Practice with Huawei Cloud database services including RDS, DDS, and other database solutions.",
+                    url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1933",
+                    icon: "🗄️",
+                    badge: "Sandbox"
+                },
+                {
+                    title: "Auto Scaling",
+                    description: "Explore auto scaling capabilities and elastic scaling features in a controlled lab environment.",
+                    url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1865",
+                    icon: "📈",
+                    badge: "Sandbox"
+                }
+            ];
 
-            <!-- Posts -->
-            <div class="post">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div class="post-info">
-                        <div class="post-author">John Doe</div>
-                        <div class="post-time">2 hours ago · 🌍</div>
-                    </div>
-                    <div style="margin-left: auto;">...</div>
-                </div>
-                <div class="post-content">
-                    Just finished an amazing project! Can't wait to share more details soon. 🚀
-                </div>
-                <div class="post-image"></div>
-                <div class="post-stats">
-                    <span>👍❤️😮 125 people</span>
-                    <span>48 comments · 12 shares</span>
-                </div>
-                <div class="post-actions">
-                    <div class="post-action">
-                        <span>👍</span>
-                        <span>Like</span>
-                    </div>
-                    <div class="post-action">
-                        <span>💬</span>
-                        <span>Comment</span>
-                    </div>
-                    <div class="post-action">
-                        <span>↗️</span>
-                        <span>Share</span>
-                    </div>
-                </div>
-            </div>
+            let allCards = [];
 
-            <div class="post">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div class="post-info">
-                        <div class="post-author">Jane Smith</div>
-                        <div class="post-time">5 hours ago · 🌍</div>
-                    </div>
-                    <div style="margin-left: auto;">...</div>
-                </div>
-                <div class="post-content">
-                    Beautiful sunset today! Nature never disappoints. 🌅✨
-                </div>
-                <div class="post-image"></div>
-                <div class="post-stats">
-                    <span>👍❤️ 89 people</span>
-                    <span>23 comments · 7 shares</span>
-                </div>
-                <div class="post-actions">
-                    <div class="post-action">
-                        <span>👍</span>
-                        <span>Like</span>
-                    </div>
-                    <div class="post-action">
-                        <span>💬</span>
-                        <span>Comment</span>
-                    </div>
-                    <div class="post-action">
-                        <span>↗️</span>
-                        <span>Share</span>
-                    </div>
-                </div>
-            </div>
+            // Function to create ripple effect
+            function createRipple(event, card) {
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                
+                const rect = card.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = event.clientX - rect.left - size / 2;
+                const y = event.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                
+                card.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            }
 
-            <div class="post">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div class="post-info">
-                        <div class="post-author">Mike Johnson</div>
-                        <div class="post-time">8 hours ago · 🌍</div>
-                    </div>
-                    <div style="margin-left: auto;">...</div>
-                </div>
-                <div class="post-content">
-                    Who else is excited for the weekend? 🎉 Drop your plans below! 👇
-                </div>
-                <div class="post-stats">
-                    <span>👍😂❤️ 234 people</span>
-                    <span>67 comments · 21 shares</span>
-                </div>
-                <div class="post-actions">
-                    <div class="post-action">
-                        <span>👍</span>
-                        <span>Like</span>
-                    </div>
-                    <div class="post-action">
-                        <span>💬</span>
-                        <span>Comment</span>
-                    </div>
-                    <div class="post-action">
-                        <span>↗️</span>
-                        <span>Share</span>
-                    </div>
-                </div>
-            </div>
-        </main>
+            // Function to show loading
+            function showLoading(siteName) {
+                const loading = document.getElementById('loading');
+                loading.querySelector('.loading-text').textContent = `Opening ${siteName}...`;
+                loading.classList.add('show');
+            }
 
-        <!-- Right Sidebar -->
-        <aside class="right-sidebar">
-            <div class="sidebar-header">
-                <span class="sidebar-title">Contacts</span>
-                <div style="display: flex; gap: 8px;">
-                    <span>🎥</span>
-                    <span>🔍</span>
-                    <span>...</span>
-                </div>
-            </div>
+            // Function to show tooltip
+            function showTooltip(text, x, y) {
+                const tooltip = document.getElementById('tooltip');
+                tooltip.textContent = text;
+                tooltip.style.left = x + 'px';
+                tooltip.style.top = y + 10 + 'px';
+                tooltip.classList.add('show');
+            }
 
-            <div class="contact-item">
-                <div class="contact-avatar">
+            function hideTooltip() {
+                const tooltip = document.getElementById('tooltip');
+                tooltip.classList.remove('show');
+            }
+
+            // Function to create cards
+            function createCards(cardsToShow = cardsData) {
+                const container = document.getElementById('cardsContainer');
+                container.innerHTML = '';
+                
+                cardsToShow.forEach(card => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('card');
+                    cardElement.dataset.title = card.title.toLowerCase();
+                    cardElement.dataset.description = card.description.toLowerCase();
+                    
+                    cardElement.innerHTML = `
+                        ${card.badge ? `<span class="badge">${card.badge}</span>` : ''}
+                        <div class="card-icon">${card.icon}</div>
+                        <h2 class="card-title">${card.title}</h2>
+                        <p class="card-description">${card.description}</p>
+                        <div class="card-footer">
+                            <a href="${card.url}" target="_blank" rel="noopener noreferrer" class="card-link" onclick="event.stopPropagation()">
+                                Visit Site
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                            <span class="click-hint">
+                                👆 Click anywhere
+                            </span>
+                        </div>
+                    `;
+                    
+                    // Add click event to entire card
+                    cardElement.addEventListener('click', function(e) {
+                        if (e.target.tagName !== 'A' && !e.target.closest('a')) {
+                            createRipple(e, this);
+                            showLoading(card.title);
+                            window.open(card.url, '_blank');
+                            setTimeout(() => {
+                                document.getElementById('loading').classList.remove('show');
+                            }, 800);
+                        }
+                    });
+
+                    // Add hover tooltip
+                    cardElement.addEventListener('mouseenter', function(e) {
+                        showTooltip(`Click to visit ${card.title}`, e.pageX, e.pageY);
+                    });
+
+                    cardElement.addEventListener('mousemove', function(e) {
+                        showTooltip(`Click to visit ${card.title}`, e.pageX, e.pageY);
+                    });
+
+                    cardElement.addEventListener('mouseleave', function() {
+                        hideTooltip();
+                    });
+                    
+                    // Add ripple effect when clicking the link
+                    const link = cardElement.querySelector('.card-link');
+                    link.addEventListener('click', function(e) {
+                        createRipple(e, cardElement);
+                        showLoading(card.title);
+                    });
+                    
+                    container.appendChild(cardElement);
+                    allCards.push(cardElement);
+                });
+            }
+
+            // Search functionality
+            function searchCards() {
+                const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+                const noResults = document.getElementById('noResults');
+                
+                if (searchTerm === '') {
+                    allCards.forEach(card => card.style.display = 'block');
+                    noResults.classList.remove('show');
+                    return;
+                }
+
+                let hasResults = false;
+                allCards.forEach(card => {
+                    const title = card.dataset.title;
+                    const description = card.dataset.description;
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        hasResults = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (hasResults) {
+                    noResults.classList.remove('show');
+                } else {
+                    noResults.classList.add('show');
+                }
+            }
+
+            // Initialize
+            window.addEventListener('DOMContentLoaded', function() {
+                createCards();
+                
+                // Add search event listener
+                const searchBox = document.getElementById('searchBox');
+                searchBox.addEventListener('input', searchCards);
+
+                // Add keyboard shortcuts
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === '/' && document.activeElement !== searchBox) {
+                        e.preventDefault();
+                        searchBox.focus();
+                    }
+                });
+            });
+        </script>
+    </body>
+    </html>
