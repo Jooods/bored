@@ -14,7 +14,7 @@
 
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
                 min-height: 100vh;
                 padding: 40px 20px;
             }
@@ -33,11 +33,11 @@
                 color: white;
                 font-size: 3rem;
                 margin-bottom: 15px;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             }
 
             .subtitle {
-                color: rgba(255, 255, 255, 0.9);
+                color: rgba(255, 255, 255, 0.7);
                 font-size: 1.2rem;
             }
 
@@ -54,7 +54,7 @@
                 padding: 35px;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                 position: relative;
                 overflow: hidden;
                 border: 3px solid transparent;
@@ -67,15 +67,15 @@
                 left: 0;
                 width: 100%;
                 height: 5px;
-                background: linear-gradient(90deg, #667eea, #764ba2);
+                background: linear-gradient(90deg, #333, #000);
                 transform: scaleX(0);
                 transition: transform 0.3s ease;
             }
 
             .card:hover {
                 transform: translateY(-10px) scale(1.02);
-                box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-                border-color: #667eea;
+                box-shadow: 0 20px 50px rgba(255,255,255,0.1);
+                border-color: #333;
             }
 
             .card:hover::before {
@@ -89,14 +89,14 @@
             .card-icon {
                 width: 80px;
                 height: 80px;
-                background: linear-gradient(135deg, #667eea, #764ba2);
+                background: linear-gradient(135deg, #333, #000);
                 border-radius: 20px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin-bottom: 25px;
                 font-size: 40px;
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
                 transition: transform 0.3s ease;
             }
 
@@ -107,7 +107,7 @@
             .card-title {
                 font-size: 1.75rem;
                 font-weight: bold;
-                color: #333;
+                color: #000;
                 margin-bottom: 15px;
             }
 
@@ -130,19 +130,19 @@
             .card-link {
                 display: inline-flex;
                 align-items: center;
-                color: #667eea;
+                color: #000;
                 font-weight: 600;
                 text-decoration: none;
                 font-size: 1rem;
                 transition: all 0.3s ease;
                 padding: 8px 16px;
                 border-radius: 8px;
-                background: rgba(102, 126, 234, 0.1);
+                background: rgba(0, 0, 0, 0.05);
             }
 
             .card-link:hover {
                 color: white;
-                background: linear-gradient(135deg, #667eea, #764ba2);
+                background: linear-gradient(135deg, #333, #000);
             }
 
             .card-link svg {
@@ -172,20 +172,20 @@
                 position: absolute;
                 top: 20px;
                 right: 20px;
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                background: linear-gradient(135deg, #4a4a4a 0%, #000 100%);
                 color: white;
                 padding: 6px 14px;
                 border-radius: 20px;
                 font-size: 0.75rem;
                 font-weight: bold;
-                box-shadow: 0 3px 10px rgba(245, 87, 108, 0.3);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
             }
 
             /* Ripple effect */
             .ripple {
                 position: absolute;
                 border-radius: 50%;
-                background: rgba(102, 126, 234, 0.4);
+                background: rgba(0, 0, 0, 0.3);
                 transform: scale(0);
                 animation: ripple-animation 0.6s ease-out;
                 pointer-events: none;
@@ -201,7 +201,7 @@
             /* Tooltip */
             .tooltip {
                 position: fixed;
-                background: rgba(0, 0, 0, 0.9);
+                background: rgba(0, 0, 0, 0.95);
                 color: white;
                 padding: 8px 12px;
                 border-radius: 6px;
@@ -211,6 +211,7 @@
                 transition: opacity 0.2s;
                 z-index: 1000;
                 white-space: nowrap;
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
 
             .tooltip.show {
@@ -226,9 +227,10 @@
                 background: white;
                 padding: 30px 40px;
                 border-radius: 15px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
                 display: none;
                 z-index: 2000;
+                border: 2px solid #000;
             }
 
             .loading.show {
@@ -239,7 +241,7 @@
                 width: 50px;
                 height: 50px;
                 border: 4px solid #f3f3f3;
-                border-top: 4px solid #667eea;
+                border-top: 4px solid #000;
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
                 margin: 0 auto 15px;
@@ -252,7 +254,7 @@
 
             .loading-text {
                 text-align: center;
-                color: #333;
+                color: #000;
                 font-weight: 600;
             }
 
@@ -266,16 +268,19 @@
                 width: 100%;
                 padding: 18px 24px;
                 font-size: 1.1rem;
-                border: none;
+                border: 2px solid rgba(255, 255, 255, 0.2);
                 border-radius: 50px;
-                box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
                 outline: none;
                 transition: all 0.3s ease;
+                background: white;
+                color: #000;
             }
 
             .search-box:focus {
-                box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+                box-shadow: 0 8px 30px rgba(255,255,255,0.1);
                 transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.3);
             }
 
             .search-box::placeholder {
