@@ -42,10 +42,25 @@
             }
 
             .cards-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+                padding: 20px;
+            }
+
+            .section-header {
+                color: #fff;
+                font-size: 1.8rem;
+                margin: 20px 0 10px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #333;
+            }
+
+            .section-container {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
                 gap: 30px;
-                padding: 20px;
+                margin-bottom: 30px;
             }
 
             .card {
@@ -364,6 +379,7 @@
             // Card data - Edit this array to add/modify cards
             const cardsData = [
                 {
+                    section: "Associate",
                     title: "Claude",
                     description: "Access the Storage Services PDF documentation through Claude AI for comprehensive learning materials.",
                     url: "https://claude.ai/chat/01933964-d2e0-8194-a8c8-b2c99cfdb4a8",
@@ -371,6 +387,7 @@
                     badge: "PDF"
                 },
                 {
+                    section: "Associate",
                     title: "ChatGPT",
                     description: "Pre-registration validity documentation and materials for Huawei Cloud certification preparation.",
                     url: "https://chatgpt.com/",
@@ -378,6 +395,7 @@
                     badge: "ChatGPT"
                 },
                 {
+                    section: "Associate",
                     title: "HCCDA Tech Essentials",
                     description: "Complete reviewer and study materials for Huawei Certified Cloud Data Center Associate certification.",
                     url: "https://connect.huaweicloud.com/intl/en-us/courses/learn/Learning/sp:cloudEdu_en?courseNo=C101692237687889160&courseType=1",
@@ -385,6 +403,7 @@
                     badge: "Reviewer"
                 },
                 {
+                    section: "Associate",
                     title: "ELB KOOLAB",
                     description: "Interactive practice labs and hands-on exercises for Huawei Cloud services and certification preparation.",
                     url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1765",
@@ -392,6 +411,7 @@
                     badge: "Labs"
                 },
                 {
+                    section: "Associate",
                     title: "Compute Services",
                     description: "Hands-on lab environment for practicing Huawei Cloud compute services including ECS and related features.",
                     url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1771",
@@ -399,6 +419,7 @@
                     badge: "Sandbox"
                 },
                 {
+                    section: "Associate",
                     title: "Storage Services",
                     description: "Interactive lab for exploring OBS, EVS, and other Huawei Cloud storage solutions with practical exercises.",
                     url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1844",
@@ -406,6 +427,7 @@
                     badge: "Sandbox"
                 },
                 {
+                    section: "Associate",
                     title: "VPC Basics",
                     description: "Learn Virtual Private Cloud fundamentals through hands-on practice in a safe sandbox environment.",
                     url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1880",
@@ -413,6 +435,7 @@
                     badge: "Sandbox"
                 },
                 {
+                    section: "Associate",
                     title: "Database Services",
                     description: "Practice with Huawei Cloud database services including RDS, DDS, and other database solutions.",
                     url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1933",
@@ -420,11 +443,20 @@
                     badge: "Sandbox"
                 },
                 {
+                    section: "Associate",
                     title: "Auto Scaling",
                     description: "Explore auto scaling capabilities and elastic scaling features in a controlled lab environment.",
                     url: "https://lab.huaweicloud.com/intl/en-us/experiment-detail_1865",
                     icon: "📈",
                     badge: "Sandbox"
+                },
+                {
+                    section: "Professional",
+                    title: "HCCDP Migration Essentials",
+                    description: "Comprehensive materials and labs for Huawei Certified Cloud Developer Professional - Migration certification.",
+                    url: "https://connect.huaweicloud.com/intl/en-us/courses/learn/Learning/sp:cloudEdu_en?courseNo=C101684918522492515&courseType=1",  
+                    icon: "🚀",
+                    badge: "Professional"
                 }
             ];
 
@@ -475,7 +507,31 @@
                 const container = document.getElementById('cardsContainer');
                 container.innerHTML = '';
                 
+                // Group cards by section
+                const sections = {};
                 cardsToShow.forEach(card => {
+                    const section = card.section || 'Other';
+                    if (!sections[section]) {
+                        sections[section] = [];
+                    }
+                    sections[section].push(card);
+                });
+
+                // Create sections and their cards
+                Object.entries(sections).forEach(([sectionName, sectionCards]) => {
+                    // Add section header
+                    const sectionHeader = document.createElement('h2');
+                    sectionHeader.className = 'section-header';
+                    sectionHeader.textContent = sectionName;
+                    container.appendChild(sectionHeader);
+                    
+                    // Create section container
+                    const sectionContainer = document.createElement('div');
+                    sectionContainer.className = 'section-container';
+                    container.appendChild(sectionContainer);
+                    
+                    // Add cards to section
+                    sectionCards.forEach(card => {
                     const cardElement = document.createElement('div');
                     cardElement.classList.add('card');
                     cardElement.dataset.title = card.title.toLowerCase();
@@ -531,41 +587,80 @@
                         showLoading(card.title);
                     });
                     
-                    container.appendChild(cardElement);
+                    sectionContainer.appendChild(cardElement);
                     allCards.push(cardElement);
                 });
-            }
+            });
+        }
 
-            // Search functionality
-            function searchCards() {
-                const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-                const noResults = document.getElementById('noResults');
-                
-                if (searchTerm === '') {
-                    allCards.forEach(card => card.style.display = 'block');
-                    noResults.classList.remove('show');
-                    return;
-                }
-
-                let hasResults = false;
+        // Search functionality
+        function searchCards() {
+            const searchInput = document.getElementById('searchBox');
+            if (!searchInput) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const noResults = document.getElementById('noResults');
+            
+            if (!searchTerm) {
                 allCards.forEach(card => {
-                    const title = card.dataset.title;
-                    const description = card.dataset.description;
-                    
-                    if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                        card.style.display = 'block';
-                        hasResults = true;
-                    } else {
-                        card.style.display = 'none';
+                    const section = card.closest('.section-container');
+                    if (section) {
+                        section.style.display = 'grid';
                     }
+                    card.style.display = 'block';
                 });
-
-                if (hasResults) {
+                
+                document.querySelectorAll('.section-header').forEach(header => {
+                    header.style.display = 'block';
+                });
+                
+                if (noResults) {
                     noResults.classList.remove('show');
-                } else {
-                    noResults.classList.add('show');
                 }
+                return;
             }
+
+            let hasResults = false;
+            const sectionsWithResults = new Set();
+            
+            allCards.forEach(card => {
+                const title = card.dataset.title || '';
+                const description = card.dataset.description || '';
+                const sectionContainer = card.closest('.section-container');
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    if (sectionContainer) {
+                        sectionsWithResults.add(sectionContainer);
+                    }
+                    hasResults = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show/hide sections based on results
+            document.querySelectorAll('.section-container').forEach(section => {
+                const hasVisibleCards = Array.from(section.children).some(
+                    child => child.style.display !== 'none'
+                );
+                section.style.display = hasVisibleCards ? 'grid' : 'none';
+            });
+
+            // Show/hide section headers based on visible sections
+            document.querySelectorAll('.section-header').forEach(header => {
+                const sectionName = header.textContent.trim();
+                const nextElement = header.nextElementSibling;
+                header.style.display = nextElement && 
+                    nextElement.classList.contains('section-container') && 
+                    nextElement.style.display !== 'none' ? 'block' : 'none';
+            });
+
+            // Show/hide no results message
+            if (noResults) {
+                noResults.classList.toggle('show', !hasResults);
+            }
+        }
 
             // Initialize
             window.addEventListener('DOMContentLoaded', function() {
@@ -573,15 +668,17 @@
                 
                 // Add search event listener
                 const searchBox = document.getElementById('searchBox');
-                searchBox.addEventListener('input', searchCards);
-
-                // Add keyboard shortcuts
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === '/' && document.activeElement !== searchBox) {
-                        e.preventDefault();
-                        searchBox.focus();
-                    }
-                });
+                if (searchBox) {
+                    searchBox.addEventListener('input', searchCards);
+                    
+                    // Add keyboard shortcuts
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === '/' && document.activeElement !== searchBox) {
+                            e.preventDefault();
+                            searchBox.focus();
+                        }
+                    });
+                }
             });
         </script>
     </body>
